@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="30.dp"
+    tools:context="com.br3ant.mmsp.SendDemoActivity">
+
+    <ImageView
+        android:id="@+id/iv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+
+        <Button
+            android:id="@+id/btn_jpg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="发送JPG" />
+
+        <Button
+            android:id="@+id/btn_rgb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="发送RGB" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+</FrameLayout>
