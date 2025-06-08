@@ -23,7 +23,11 @@ object MMSPSender {
 
     internal var config = defaultCfg
 
-    private val server by lazy { if (config.mode == Mode.SOCKET) SocketServer() else WsServer() }
+    private val server by lazy {
+        if (config.mode == Mode.SOCKET)
+            SocketServer(config.port)
+        else WsServer(config.port)
+    }
     private val readScope = CoroutineScope(Dispatchers.IO)
     private val sendScope = CoroutineScope(Dispatchers.IO)
     private val channel = Channel<ByteArray>(Channel.UNLIMITED)
@@ -55,7 +59,7 @@ object MMSPSender {
         }
     }
 
-    fun setMessageReceiver(messageReceiver: MessageReceiver){
+    fun setMessageReceiver(messageReceiver: MessageReceiver) {
         server.setMessageReceiver(messageReceiver)
     }
 

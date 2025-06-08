@@ -6,6 +6,7 @@ package com.br3ant.mmsp_socket
 data class SendConfig(
     val debug: Boolean = false,
     val mode: Mode = Mode.SOCKET,
+    val port: Int = 9092,
     val cameraWidth: Int = 612,
     val cameraHeight: Int = 612,
     val humanWidth: Int = 720,
