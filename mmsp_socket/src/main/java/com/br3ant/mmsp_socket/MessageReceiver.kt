@@ -6,4 +6,6 @@ package com.br3ant.mmsp_socket
 interface MessageReceiver {
 
     fun onTTS(tts: String)
+
+    fun onServerParamUpdate(param: ServerParam)
 }

@@ -45,4 +45,9 @@ enum class CmdType(val type: Byte) {
      * 客户端请求TTS
      */
     PLAY_TTS(0x50),
+
+    /**
+     * 配置参数
+     */
+    SET_PARAM(0x51),
 }

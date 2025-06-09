@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
@@ -76,31 +77,51 @@ internal class WsServer(
 
     override fun onMessage(conn: WebSocket, message: ByteBuffer) {
         super.onMessage(conn, message)
-        Log.d(MMSPSender.TAG, "onMessage buffer :${message.limit()}")
+        if (config.debug) {
+            Log.d(MMSPSender.TAG, "onMessage buffer :${message.limit()}")
+        }
 //        val channel = recvChannels.getOrPut(conn.hashCode()) {
 //            Channel(1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 //        }
 //        channel.trySend(message)
-        val limit = message.limit()
-        if (limit < 4) {
-            //web 发送过来的无效
-            return
-        }
-        val data = message.order(ByteOrder.LITTLE_ENDIAN)
-
-        val cmd = data.get(2)
-        val dataLen = data.getInt(3)
-        if (dataLen + 10 > limit) {
-            Log.d(MMSPSender.TAG, "onMessage buffer 过短 dataLen:${dataLen} limit:${limit}")
-            return
-        }
-        val dataArray = ByteArray(dataLen)
-        data.position(9)
-        data.get(dataArray, 0, dataLen)
-        when (cmd) {
-            CmdType.PLAY_TTS.type -> {
-                messageReceiver?.onTTS(dataArray.decodeToString())
+        runCatching {
+            val limit = message.limit()
+            if (limit < 4) {
+                //web 发送过来的无效
+                return
             }
+            val data = message.order(ByteOrder.LITTLE_ENDIAN)
+
+            val cmd = data.get(2)
+            val dataLen = data.getInt(3)
+            if (dataLen + 10 > limit) {
+                Log.d(MMSPSender.TAG, "onMessage buffer 过短 dataLen:${dataLen} limit:${limit}")
+                return
+            }
+            val dataArray = ByteArray(dataLen)
+            data.position(9)
+            data.get(dataArray, 0, dataLen)
+            when (cmd) {
+                CmdType.PLAY_TTS.type -> {
+                    messageReceiver?.onTTS(dataArray.decodeToString())
+                }
+
+                CmdType.SET_PARAM.type -> {
+                    val param = Json {
+                        ignoreUnknownKeys = true
+                        encodeDefaults = true
+                    }.decodeFromString(
+                        ServerParam.serializer(),
+                        dataArray.decodeToString()
+                    )
+                    if (config.debug) {
+                        Log.i(MMSPSender.TAG, "onMessage SET_PARAM:${param}")
+                    }
+                    messageReceiver?.onServerParamUpdate(param)
+                }
+            }
+        }.onFailure {
+            Log.d(MMSPSender.TAG, "onMessage error:${it.message}")
         }
     }
 

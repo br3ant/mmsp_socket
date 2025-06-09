@@ -42,6 +42,10 @@ class SendDemoActivity : AppCompatActivity() {
             override fun onTTS(tts: String) {
                 Log.i(TAG, "MessageReceiver onTTS :$tts")
             }
+
+            override fun onServerParamUpdate(param: ServerParam) {
+                Log.i(TAG, "MessageReceiver onServerParamUpdate :$param")
+            }
         })
     }
 
