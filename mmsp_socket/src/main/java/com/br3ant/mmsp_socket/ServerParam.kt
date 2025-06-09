@@ -14,9 +14,9 @@ data class ServerParam(
     val transTTS: Boolean = true,
 
     /**
-     * 传输cae
+     * 播放cae
      */
-    val transCAE: Boolean = false,
+    val playCAE: Boolean = false,
 )
 
 
