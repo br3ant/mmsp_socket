@@ -12,9 +12,6 @@ import android.provider.Settings;
 import android.view.Window;
 import android.view.WindowManager;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import java.util.ArrayList;
 
 /**
@@ -38,7 +35,6 @@ public class BaseActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        initPermission();
         requestPermissions(99);
     }
 
@@ -83,7 +79,7 @@ public class BaseActivity extends Activity {
             }
 
             // 是否应该显示权限请求
-            if (requestPerssionArr.size() >= 1) {
+            if (!requestPerssionArr.isEmpty()) {
                 String[] requestArray = new String[requestPerssionArr.size()];
                 for (int i = 0; i < requestArray.length; i++) {
                     requestArray[i] = requestPerssionArr.get(i);
@@ -96,34 +92,6 @@ public class BaseActivity extends Activity {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    /**
-     * android 6.0 以上需要动态申请权限
-     */
-    private void initPermission() {
-        String permissions[] = {
-                Manifest.permission.INTERNET,
-                Manifest.permission.ACCESS_NETWORK_STATE,
-                Manifest.permission.MODIFY_AUDIO_SETTINGS,
-                Manifest.permission.ACCESS_WIFI_STATE,
-                Manifest.permission.CHANGE_WIFI_STATE,
-                Manifest.permission.READ_PHONE_STATE,
-                Manifest.permission.CAMERA
-        };
-
-        ArrayList<String> toApplyList = new ArrayList<String>();
-
-        for (String perm : permissions) {
-            if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, perm)) {
-                toApplyList.add(perm);
-                //进入到这里代表没有权限.
-            }
-        }
-        String tmpList[] = new String[toApplyList.size()];
-        if (!toApplyList.isEmpty()) {
-            ActivityCompat.requestPermissions(this, toApplyList.toArray(tmpList), 123);
         }
     }
 
