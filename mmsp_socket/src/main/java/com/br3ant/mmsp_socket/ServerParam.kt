@@ -11,7 +11,7 @@ data class ServerParam(
     /**
      * 传输tts
      */
-    val transTTS: Boolean = true,
+    val transTTS: Boolean = false,
 
     /**
      * 播放cae
