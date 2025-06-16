@@ -182,7 +182,7 @@ internal class WsServer(
             val index = ByteBuffer.wrap(indexBytes).order(ByteOrder.LITTLE_ENDIAN)
                 .getShort() and 0xFFFF.toShort()
 
-            Log.i(MMSPSender.TAG, "sendData type=${message.cmd}, index=$index, len: $size 字节")
+//            Log.i(MMSPSender.TAG, "sendData type=${message.cmd}, index=$index, len: $size 字节")
 
             val sizeBytes =
                 ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(size).array()
@@ -203,7 +203,7 @@ internal class WsServer(
 
             // 发送结束标记
 //            socket.send(byteArrayOf(0x00))
-            Log.i(MMSPSender.TAG, "sendData index=$index 发送完成")
+//            Log.i(MMSPSender.TAG, "sendData index=$index 发送完成")
 
             // 等待客户端确认接收
 //            val confirmBytesRead = withTimeoutOrNull(100) {
@@ -217,10 +217,10 @@ internal class WsServer(
 //            }
 
             if (config.debug) {
-                Log.i(
-                    MMSPSender.TAG,
-                    "客户端确认,传输用时: ${System.currentTimeMillis() - message.time} ms"
-                )
+//                Log.i(
+//                    MMSPSender.TAG,
+//                    "客户端确认,传输用时: ${System.currentTimeMillis() - message.time} ms"
+//                )
             }
 
         } catch (e: Exception) {
