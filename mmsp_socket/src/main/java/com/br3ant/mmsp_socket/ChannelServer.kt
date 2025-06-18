@@ -7,7 +7,7 @@ interface ChannelServer {
 
     fun launch()
 
-    fun send(type: CmdType, data: ByteArray)
+    fun send(message: MessageData)
 
     fun stop()
 

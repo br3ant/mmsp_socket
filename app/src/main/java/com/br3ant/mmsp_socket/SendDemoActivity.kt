@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import com.br3ant.mmsp_socket.MMSPSender.rgbLikeToJpg
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -28,7 +29,7 @@ class SendDemoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_send)
-        MMSPSender.start(defaultCfg.copy(debug = true, mode = Mode.WS, port = 9093))
+        MMSPSender.start(defaultCfg.copy(debug = true, port = 49999))
         val iv = findViewById<ImageView>(R.id.iv)
         findViewById<Button>(R.id.btn_jpg).setOnClickListener {
             sendJpg(iv)
@@ -36,6 +37,10 @@ class SendDemoActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.btn_rgb).setOnClickListener {
             sendRgb(iv)
+        }
+
+        findViewById<Button>(R.id.btn_bgr).setOnClickListener {
+            sendBgr(iv)
         }
 
         MMSPSender.setMessageReceiver(object : MessageReceiver {
@@ -54,6 +59,9 @@ class SendDemoActivity : AppCompatActivity() {
         MMSPSender.stop()
     }
 
+    private val width = 540
+    private val height = 1200
+
     var jpgJob: Job? = null
     fun sendJpg(iv: ImageView) {
         if (jpgJob?.isActive == true) return
@@ -62,7 +70,7 @@ class SendDemoActivity : AppCompatActivity() {
             val jpgs = File(getExternalFilesDir(null), "br3ant/jpgs")
             jpgs.list()?.sorted()?.forEach {
                 val data = File(jpgs, it).readBytes()
-                MMSPSender.sendToAll(CmdType.CAMERA_IMG, data)
+                MMSPSender.sendJpg(data, width, height)
                 val options = BitmapFactory.Options()
                 options.inMutable = true
                 val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size, options)
@@ -79,15 +87,13 @@ class SendDemoActivity : AppCompatActivity() {
 
 
     var rgbJob: Job? = null
-    private val width = 540
-    private val height = 1200
     fun sendRgb(iv: ImageView) {
         if (rgbJob?.isActive == true) return
         rgbJob = lifecycleScope.launch(Dispatchers.IO) {
             val rgbs = File(getExternalFilesDir(null), "br3ant/rgb_files")
             rgbs.list()?.sorted()?.forEach {
                 val data = File(rgbs, it).readBytes()
-                MMSPSender.sendRgbLikeData(CmdType.HUMAN_IMG, data, FORMAT.RGB, width, height)
+                MMSPSender.sendBgr(data, width, height)
 
                 val rgbs = rgbLikeToJpg(data, FORMAT.RGB, width, height)
                 val options = BitmapFactory.Options()
@@ -101,6 +107,30 @@ class SendDemoActivity : AppCompatActivity() {
                 Log.i(TAG, "rgbs is null")
             }
 
+        }
+    }
+
+    var bgrJob: Job? = null
+    fun sendBgr(iv: ImageView) {
+        if (bgrJob?.isActive == true) return
+        bgrJob = lifecycleScope.launch(Dispatchers.IO) {
+            val bgrs = File(getExternalFilesDir(null), "br3ant/bgr_files")
+            bgrs.list()?.sorted()?.forEach {
+                val data = File(bgrs, it).readBytes()
+                Log.i(TAG, "bgr size:${data.size}")
+
+                MMSPSender.sendBgr(data, width, height)
+                delay(500)
+//                val bgr = rgbLikeToJpg(data, FORMAT.BGR, width, height)
+//                val options = BitmapFactory.Options()
+//                options.inMutable = true
+//                val bitmap = BitmapFactory.decodeByteArray(bgr, 0, bgr.size, options)
+//                withContext(Dispatchers.Main) {
+//                    iv.setImageBitmap(bitmap)
+//                }
+            } ?: run {
+                Log.i(TAG, "bgrs is null")
+            }
         }
     }
 }

@@ -1,15 +1,16 @@
 package com.br3ant.mmsp_socket
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.util.Log
 import androidx.core.graphics.createBitmap
+import androidx.core.graphics.get
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 
 /**
@@ -23,11 +24,7 @@ object MMSPSender {
 
     internal var config = defaultCfg
 
-    private val server by lazy {
-        if (config.mode == Mode.SOCKET)
-            SocketServer(config.port)
-        else WsServer(config.port)
-    }
+    private val server by lazy { WsServer(config.port) }
     private val readScope = CoroutineScope(Dispatchers.IO)
     private val sendScope = CoroutineScope(Dispatchers.IO)
     private val channel = Channel<ByteArray>(Channel.UNLIMITED)
@@ -40,13 +37,6 @@ object MMSPSender {
             Log.i(TAG, this.config.toString())
 
             server.launch()
-
-            //声音特殊，按照chuck发送
-            readScope.launch {
-                for (audio in channel) {
-                    sendToAll(CmdType.AUDIO, audio)
-                }
-            }
 
             running = true
         }
@@ -63,20 +53,8 @@ object MMSPSender {
         server.setMessageReceiver(messageReceiver)
     }
 
-    fun sendToAll(type: CmdType, data: ByteArray) {
-        server.send(type, data)
-    }
-
-    fun sendToAll(type: CmdType, string: String) {
-        sendToAll(type, string.toByteArray())
-    }
-
-    fun sendToAllFormat(type: CmdType, width: Int, height: Int, format: Int = 1) {
-        sendToAll(type, JSONObject().apply {
-            put("format", format)
-            put("width", width)
-            put("height", height)
-        }.toString().toByteArray(Charsets.UTF_8))
+    fun send(data: MessageData) {
+        server.send(data)
     }
 
     fun sendAudio(data: ByteArray, chuck: Int = 3200, delay: Long = 100, firstDelay: Long = 300) {
@@ -96,10 +74,18 @@ object MMSPSender {
 
     }
 
-    fun sendRgbLikeData(type: CmdType, data: ByteArray, format: FORMAT, width: Int, height: Int) {
-        val jpgBytes = rgbLikeToJpg(data, format, width, height)
-        sendToAll(type, jpgBytes)
+    fun sendJpg(data: ByteArray, width: Int, height: Int) {
+        send(Video(width, height, jpegToBgr(data)))
     }
+
+    fun sendBgr(data: ByteArray, width: Int, height: Int) {
+        send(Video(width, height, data))
+    }
+
+//    fun sendRgbLikeData(data: ByteArray, format: FORMAT, width: Int, height: Int) {
+//        val jpgBytes = rgbLikeToJpg(data, format, width, height)
+//        send(Video(width, height, jpgBytes))
+//    }
 
     fun rgbLikeToJpg(bytes: ByteArray, format: FORMAT, width: Int, height: Int): ByteArray {
         val pixels = IntArray(width * height)
@@ -157,6 +143,28 @@ object MMSPSender {
         val outputStream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
         return outputStream.toByteArray()
+    }
+
+    fun jpegToBgr(jpegByteArray: ByteArray): ByteArray {
+        // 1. 将 JPEG ByteArray 解码为 Bitmap
+        val bitmap = BitmapFactory.decodeByteArray(jpegByteArray, 0, jpegByteArray.size)
+
+        // 2. 创建一个 BGR ByteArray
+        val bgrByteArray = ByteArray(bitmap.width * bitmap.height * 3)
+        var index = 0
+
+        // 3. 遍历每个像素并提取 BGR 值
+        for (y in 0 until bitmap.height) {
+            for (x in 0 until bitmap.width) {
+                val pixel = bitmap[x, y]
+                // 注意顺序: BGR
+                bgrByteArray[index++] = (Color.blue(pixel)).toByte()
+                bgrByteArray[index++] = (Color.green(pixel)).toByte()
+                bgrByteArray[index++] = (Color.red(pixel)).toByte()
+            }
+        }
+
+        return bgrByteArray
     }
 
 }
