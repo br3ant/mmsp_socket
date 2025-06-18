@@ -64,3 +64,27 @@ class Video(
         return message
     }
 }
+
+class Audio(
+    val vadStatus: Int,
+    val audioData: ByteArray,
+) : MessageData() {
+    override fun bytes(index: Long): ByteArray {
+        val dataLen = audioData.size
+
+        // Create message buffer
+        val message = ByteArray(12 + dataLen)
+        val buffer = ByteBuffer.wrap(message)
+        buffer.order(ByteOrder.BIG_ENDIAN)
+
+        // Write header fields
+        buffer.putInt(10002)                      // 0-4: audi type
+        buffer.putInt(dataLen)                    // 4-8: data_len
+        buffer.putInt(vadStatus)                   // 8-12: vadStatus
+
+        // Add audio data
+        System.arraycopy(audioData, 0, message, 12, dataLen)
+
+        return message
+    }
+}
