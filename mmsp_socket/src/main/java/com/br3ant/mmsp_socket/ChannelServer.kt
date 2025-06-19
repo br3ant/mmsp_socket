@@ -9,6 +9,8 @@ interface ChannelServer {
 
     fun send(message: MessageData)
 
+    suspend fun syncSend(message: MessageData)
+
     fun stop()
 
     fun setMessageReceiver(messageReceiver: MessageReceiver)

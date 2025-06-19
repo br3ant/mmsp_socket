@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.util.Log
 import androidx.core.graphics.createBitmap
-import androidx.core.graphics.get
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -78,6 +77,11 @@ object MMSPSender {
         send(Video(width, height, jpegToBgr(data)))
     }
 
+    suspend fun syncSendJpg(data: ByteArray, width: Int, height: Int) {
+        server.syncSend(Video(width, height, jpegToBgr(data)))
+    }
+
+
     fun sendBgr(data: ByteArray, width: Int, height: Int) {
         send(Video(width, height, data))
     }
@@ -146,22 +150,24 @@ object MMSPSender {
     }
 
     fun jpegToBgr(jpegByteArray: ByteArray): ByteArray {
-        // 1. 将 JPEG ByteArray 解码为 Bitmap
         val bitmap = BitmapFactory.decodeByteArray(jpegByteArray, 0, jpegByteArray.size)
+            ?: throw IllegalArgumentException("Decode jpegByteArray failed")
 
-        // 2. 创建一个 BGR ByteArray
-        val bgrByteArray = ByteArray(bitmap.width * bitmap.height * 3)
+        val width = bitmap.width
+        val height = bitmap.height
+        val pixelCount = width * height
+        val pixels = IntArray(pixelCount)
+
+        // 一次性获取所有像素（ARGB格式）
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+
+        val bgrByteArray = ByteArray(pixelCount * 3)
+
         var index = 0
-
-        // 3. 遍历每个像素并提取 BGR 值
-        for (y in 0 until bitmap.height) {
-            for (x in 0 until bitmap.width) {
-                val pixel = bitmap[x, y]
-                // 注意顺序: BGR
-                bgrByteArray[index++] = (Color.blue(pixel)).toByte()
-                bgrByteArray[index++] = (Color.green(pixel)).toByte()
-                bgrByteArray[index++] = (Color.red(pixel)).toByte()
-            }
+        for (pixel in pixels) {
+            bgrByteArray[index++] = Color.blue(pixel).toByte()   // B
+            bgrByteArray[index++] = Color.green(pixel).toByte()  // G
+            bgrByteArray[index++] = Color.red(pixel).toByte()    // R
         }
 
         return bgrByteArray

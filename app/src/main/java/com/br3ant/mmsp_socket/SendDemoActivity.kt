@@ -29,8 +29,13 @@ class SendDemoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_send)
-        MMSPSender.start(defaultCfg.copy(debug = true, port = 49999))
+
         val iv = findViewById<ImageView>(R.id.iv)
+
+        findViewById<Button>(R.id.btn_ws).setOnClickListener {
+            MMSPSender.start(defaultCfg.copy(debug = true, port = 49999))
+        }
+
         findViewById<Button>(R.id.btn_jpg).setOnClickListener {
             sendJpg(iv)
 
@@ -70,7 +75,7 @@ class SendDemoActivity : AppCompatActivity() {
             val jpgs = File(getExternalFilesDir(null), "br3ant/jpgs")
             jpgs.list()?.sorted()?.forEach {
                 val data = File(jpgs, it).readBytes()
-                MMSPSender.sendJpg(data, width, height)
+                MMSPSender.syncSendJpg(data, width, height)
                 val options = BitmapFactory.Options()
                 options.inMutable = true
                 val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size, options)

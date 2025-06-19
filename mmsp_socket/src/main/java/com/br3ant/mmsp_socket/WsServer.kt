@@ -2,6 +2,8 @@ package com.br3ant.mmsp_socket
 
 import android.util.Log
 import com.br3ant.mmsp_socket.MMSPSender.config
+import com.br3ant.mmsp_socket.utils.ByteRateCounter
+import kotlinx.coroutines.delay
 import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
@@ -22,6 +24,8 @@ internal class WsServer(
     WebSocketServer(InetSocketAddress(port)), ChannelServer {
 
     private val socketList = CopyOnWriteArrayList<WebSocket>()
+    private var socket: WebSocket? = null
+    private val byteRateCounter = ByteRateCounter()
 
     private var messageReceiver: MessageReceiver? = null
 
@@ -33,6 +37,7 @@ internal class WsServer(
         super.stop()
         socketList.forEach { it.close() }
         socketList.clear()
+        socket?.close()
     }
 
     override fun setMessageReceiver(messageReceiver: MessageReceiver) {
@@ -41,11 +46,13 @@ internal class WsServer(
 
     override fun onOpen(conn: WebSocket, handshake: ClientHandshake) {
         socketList.add(conn)
+        socket = conn
     }
 
     override fun onClose(conn: WebSocket, code: Int, reason: String, remote: Boolean) {
         Log.d(MMSPSender.TAG, "Connection closed: ${conn.remoteSocketAddress}")
         socketList.remove(conn)
+        socket = null
     }
 
     override fun onMessage(conn: WebSocket, message: String) {
@@ -100,6 +107,14 @@ internal class WsServer(
                 it.send(data.bytes(it.nextIndex()))
             }
         }
+    }
+
+    override suspend fun syncSend(message: MessageData) {
+        val socket = socket ?: return
+        while (socket.hasBufferedData()) {
+            delay(10)
+        }
+        socket.send(message.bytes(socket.nextIndex()).also { byteRateCounter.logBytes(it.size) })
     }
 
     private val indexMap = ConcurrentHashMap<Int, Long>()
