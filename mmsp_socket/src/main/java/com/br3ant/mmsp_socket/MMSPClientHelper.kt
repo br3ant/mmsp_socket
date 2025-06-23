@@ -1,7 +1,9 @@
 package com.br3ant.mmsp_socket
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.os.Environment
 import android.util.Log
 import androidx.core.graphics.createBitmap
 import kotlinx.coroutines.CoroutineScope
@@ -11,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -26,6 +29,17 @@ object MMSPClientHelper {
     private var client: WsClient? = null
     private val sendScope = CoroutineScope(Dispatchers.IO)
     private val channel = Channel<ByteArray>(Channel.UNLIMITED)
+
+    fun hostnameFormLocal(context: Context): String? {
+        val cfg = listOf(
+            File(context.getExternalFilesDir(null), "/huisheng/ws.config"),
+            File(Environment.getExternalStorageDirectory(), "/huisheng/ws.config")
+        )
+
+        return cfg.find { it.exists() && it.isFile && it.canRead() }?.readText()?.trim().apply {
+            Log.i(TAG, "MMSPClientHelper localIP:$this")
+        }
+    }
 
     fun start(
         hostname: String,

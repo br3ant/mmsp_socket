@@ -62,20 +62,22 @@ class SendDemoActivity : AppCompatActivity() {
 
     fun connectMMSP() {
 //        startMMSPService()
+        val hostname = MMSPClientHelper.hostnameFormLocal(this)
+        if (hostname.isNullOrEmpty().not()) {
+            MMSPClientHelper.start(hostname, 9095, object : ServerMessageListener {
+                override fun onConnected() {
+                    MMSPClientHelper.sendToAll(CmdType.CAMERA_FORMAT, JSONObject().apply {
+                        put("format", 1)
+                        put("width", width)
+                        put("height", height)
+                    }.toString().toByteArray(Charsets.UTF_8))
+                }
 
-        MMSPClientHelper.start("192.168.2.1", 9095, object : ServerMessageListener {
-            override fun onConnected() {
-                MMSPClientHelper.sendToAll(CmdType.CAMERA_FORMAT, JSONObject().apply {
-                    put("format", 1)
-                    put("width", width)
-                    put("height", height)
-                }.toString().toByteArray(Charsets.UTF_8))
-            }
-
-            override fun onMessage(type: CmdType, data: ByteArray) {
-                Log.i(TAG, "MMSP Service WsClient cmd $type")
-            }
-        })
+                override fun onMessage(type: CmdType, data: ByteArray) {
+                    Log.i(TAG, "MMSP Service WsClient cmd $type")
+                }
+            })
+        }
     }
 
     private val connection: ServiceConnection = object : ServiceConnection {
