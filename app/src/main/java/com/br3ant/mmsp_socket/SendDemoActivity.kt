@@ -60,11 +60,13 @@ class SendDemoActivity : AppCompatActivity() {
         mmspService?.stop()
     }
 
+    val hostname by lazy { MMSPClientHelper.hostnameFormLocal(this) }
+    val port = 9095
+
     fun connectMMSP() {
 //        startMMSPService()
-        val hostname = MMSPClientHelper.hostnameFormLocal(this)
         if (hostname.isNullOrEmpty().not()) {
-            MMSPClientHelper.start(hostname, 9095, object : ServerMessageListener {
+            MMSPClientHelper.start(hostname!!, port, object : ServerMessageListener {
                 override fun onConnected() {
                     MMSPClientHelper.sendToAll(CmdType.CAMERA_FORMAT, JSONObject().apply {
                         put("format", 1)
@@ -86,7 +88,7 @@ class SendDemoActivity : AppCompatActivity() {
             mmspService = remoteService
 
             try {
-                val result = remoteService.start(9095)
+                val result = remoteService.start(hostname!!,port)
                 Log.i(TAG, "MMSP Service Connect result $result")
 
             } catch (e: RemoteException) {

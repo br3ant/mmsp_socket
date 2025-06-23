@@ -1,6 +1,6 @@
 package com.huisheng;
 
 interface IMMSPService {
-    boolean start(int port);
+    boolean start(String hostname,int port);
     boolean stop();
 }
