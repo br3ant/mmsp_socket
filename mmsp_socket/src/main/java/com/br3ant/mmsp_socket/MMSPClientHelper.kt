@@ -11,60 +11,59 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * @author houqiqi on 2025/5/22
  */
-object MMSPSender {
-    internal const val TAG = "MMSPSender"
+object MMSPClientHelper {
+    internal const val TAG = "MMSPClientHelper"
 
     @Volatile
     private var running = false
 
-    internal var config = defaultCfg
-
-    private val server by lazy {
-        if (config.mode == Mode.SOCKET)
-            SocketServer(config.port)
-        else WsServer(config.port)
-    }
-    private val readScope = CoroutineScope(Dispatchers.IO)
+    private var client: WsClient? = null
     private val sendScope = CoroutineScope(Dispatchers.IO)
     private val channel = Channel<ByteArray>(Channel.UNLIMITED)
 
-    fun start(config: SendConfig = defaultCfg) {
+    fun start(
+        hostname: String,
+        port: Int = 9092,
+        onServerMessageListener: ServerMessageListener? = null
+    ) {
         if (running) {
             Log.e(TAG, "MMSPSender Server 已经启动")
         } else {
-            this.config = config
-            Log.i(TAG, this.config.toString())
-
-            server.launch()
-
-            //声音特殊，按照chuck发送
-            readScope.launch {
-                for (audio in channel) {
-                    sendToAll(CmdType.AUDIO, audio)
-                }
-            }
-
+            client = WsClient(hostname, port, onServerMessageListener)
+            client?.connect()
             running = true
         }
     }
 
     fun stop() {
         if (running) {
-            server.stop()
+            client?.disconnect()
             running = false
         }
     }
 
-    fun setMessageReceiver(messageReceiver: MessageReceiver) {
-        server.setMessageReceiver(messageReceiver)
+    private fun buildBytes(cmd: CmdType, data: ByteArray): ByteArray {
+
+        val size = data.size
+        val indexBytes = ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN).putShort(0).array()
+
+        val sizeBytes =
+            ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(size).array()
+
+        val header =
+            byteArrayOf(0xA5.toByte(), 0x01, cmd.type) + sizeBytes + indexBytes
+
+        return header + data + byteArrayOf(0x00)
     }
 
     fun sendToAll(type: CmdType, data: ByteArray) {
-        server.send(type, data)
+        client?.send(buildBytes(type, data))
     }
 
     fun sendToAll(type: CmdType, string: String) {

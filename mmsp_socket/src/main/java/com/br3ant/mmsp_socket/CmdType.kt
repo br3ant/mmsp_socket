@@ -50,4 +50,14 @@ enum class CmdType(val type: Byte) {
      * 配置参数
      */
     SET_PARAM(0x51),
+
+    UN_KNOW(-1);
+
+    companion object {
+        fun from(type: Byte): CmdType {
+            return CmdType.entries.find { it.type == type } ?: UN_KNOW
+        }
+    }
+
+
 }
