@@ -64,6 +64,7 @@ internal class WsClient(
         super.onOpen(webSocket, response)
         Log.i(TAG, "连接已建立")
         connected = true
+        socket = webSocket
         onServerMessageListener?.onConnected()
     }
 
@@ -98,6 +99,13 @@ internal class WsClient(
 
     override fun onClosed(webSocket: okhttp3.WebSocket, code: Int, reason: String) {
         super.onClosed(webSocket, code, reason)
+        socket = null
+        Log.e(TAG, "连接已断开 reason${reason}")
+    }
+
+    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+        super.onFailure(webSocket, t, response)
+        Log.e(TAG, "连接错误 error${t.message} rep:${response?.message}")
     }
 }
 
