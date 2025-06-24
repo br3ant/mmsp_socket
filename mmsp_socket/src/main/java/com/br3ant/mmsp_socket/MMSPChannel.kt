@@ -2,6 +2,7 @@ package com.br3ant.mmsp_socket
 
 import com.br3ant.mmsp_socket.MMSPChannel.Companion.indexMap
 import com.br3ant.mmsp_socket.utils.RGBUtils
+import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -33,6 +34,28 @@ private fun MMSPChannel.indexBytes(): ByteArray {
     indexMap.put(code, nextIndex)
     return ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN).putShort(nextIndex.toShort())
         .array()
+}
+
+fun MMSPChannel.blockSend(type: CmdType, data: ByteArray) {
+    runBlocking { send(type, data) }
+}
+
+fun MMSPChannel.blockSend(type: CmdType, data: String) {
+    runBlocking { send(type, data) }
+}
+
+fun MMSPChannel.blockSendFormat(type: CmdType, width: Int, height: Int, format: Int = 1) {
+    runBlocking { sendFormat(type, width, height, format) }
+}
+
+fun MMSPChannel.blockSendRgbLikeData(
+    type: CmdType,
+    data: ByteArray,
+    format: FORMAT,
+    width: Int,
+    height: Int
+) {
+    runBlocking { sendRgbLikeData(type, data, format, width, height) }
 }
 
 suspend fun MMSPChannel.send(type: CmdType, data: ByteArray) {
