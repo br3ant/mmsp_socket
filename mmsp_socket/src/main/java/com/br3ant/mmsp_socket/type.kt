@@ -50,4 +50,23 @@ enum class CmdType(val type: Byte) {
      * 配置参数
      */
     SET_PARAM(0x51),
+
+    /**
+     * 未知
+     */
+    UN_KNOW(-1);
+
+    companion object {
+        fun from(type: Byte): CmdType {
+            return CmdType.entries.find { it.type == type } ?: UN_KNOW
+        }
+    }
+}
+
+enum class FORMAT {
+    RGB, BGR, RGBA, BGRA, ARGB
+}
+
+enum class ChannelMode {
+    SOCKET, WS, LOCAL_SOCKET
 }

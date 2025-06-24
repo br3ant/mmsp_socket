@@ -36,7 +36,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'com.huisheng' // 组织 ID，自定义
             artifactId = 'mmsp_socket' // 库名
-            version = '1.0.7' // 版本号
+            version = '1.1.0' // 版本号
 
             afterEvaluate {
                 from components.release // 对于 Android library，使用 release 组件

@@ -1,31 +1,28 @@
 package com.br3ant.mmsp_socket
 
 
+import android.net.LocalServerSocket
+import android.net.LocalSocket
 import android.util.Log
-import java.net.ServerSocket
-import java.net.Socket
 import kotlin.concurrent.thread
 
 /**
  * @author houqiqi on 2025/5/21
  */
 
-internal class SocketServer(private val port: Int) : MMSPChannel {
+internal class LocalSocketServer(private val name: String) : MMSPChannel {
 
-    private val serverSocket = ServerSocket(port)
-    private var socket: Socket? = null
+    private val serverSocket = LocalServerSocket(name)
+    private var socket: LocalSocket? = null
 
     override fun launch(): Boolean {
         thread {
-            Log.i(MMSPServer.TAG, "Socket服务端已启动，监听:$port ...")
+            Log.i(MMSPServer.TAG, "LocalSocketServer服务端已启动，监听:$name")
 
             try {
                 while (true) {
                     val clientSocket = serverSocket.accept()
-                    Log.i(
-                        MMSPServer.TAG,
-                        "接收到连接：${clientSocket.inetAddress}:${clientSocket.port}"
-                    )
+                    Log.i(MMSPServer.TAG, "接收到连接")
                     socket = clientSocket
                 }
             } finally {

@@ -1,4 +1,4 @@
-package com.br3ant.mmsp_socket
+package com.br3ant.mmsp_socket.entity
 
 import kotlinx.serialization.Serializable
 
@@ -18,5 +18,3 @@ data class ServerParam(
      */
     val playCAE: Boolean = false,
 )
-
-
