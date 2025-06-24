@@ -1,7 +1,11 @@
 package com.br3ant.mmsp_socket
 
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.net.URI
@@ -19,13 +23,22 @@ internal class WsClient(
 ) : WebSocketClient(URI("ws://${hostname}:$port")), MMSPChannel {
 
     private var channelListener: ChannelListener? = null
+    private val connectScope = CoroutineScope(Dispatchers.IO)
 
     override fun launch(): Boolean {
-        connect()
+        connectScope.launch {
+            while (true) {
+                if (isOpen.not()) {
+                    connect()
+                }
+                delay(5000)
+            }
+        }
         return true
     }
 
     override suspend fun sendData(data: ByteArray): Boolean {
+        if (isOpen.not()) return false
         while (hasBufferedData() == true) delay(10)
         send(data)
         return true
@@ -33,6 +46,7 @@ internal class WsClient(
 
     override fun terminate(): Boolean {
         close()
+        connectScope.cancel()
         return true
     }
 
