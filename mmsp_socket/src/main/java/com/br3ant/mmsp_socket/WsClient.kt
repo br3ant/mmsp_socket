@@ -4,6 +4,8 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.java_websocket.client.WebSocketClient
@@ -23,10 +25,11 @@ internal class WsClient(
 ) : WebSocketClient(URI("ws://${hostname}:$port")), MMSPChannel {
 
     private var channelListener: ChannelListener? = null
-    private val connectScope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(Dispatchers.IO)
+    private val queue = Channel<ByteArray>(10, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     override fun launch(): Boolean {
-        connectScope.launch {
+        scope.launch {
             while (true) {
                 if (isOpen.not()) {
                     connect()
@@ -34,19 +37,24 @@ internal class WsClient(
                 delay(5000)
             }
         }
+        scope.launch {
+            for (data in queue) {
+                if (isOpen.not()) break
+                while (hasBufferedData() == true) delay(10)
+                send(data)
+            }
+        }
         return true
     }
 
-    override suspend fun sendData(data: ByteArray): Boolean {
+    override fun sendData(data: ByteArray): Boolean {
         if (isOpen.not()) return false
-        while (hasBufferedData() == true) delay(10)
-        send(data)
-        return true
+        return queue.trySend(data).isSuccess
     }
 
     override fun terminate(): Boolean {
         close()
-        connectScope.cancel()
+        scope.cancel()
         return true
     }
 

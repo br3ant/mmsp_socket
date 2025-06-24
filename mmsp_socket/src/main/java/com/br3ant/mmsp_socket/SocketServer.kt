@@ -35,7 +35,7 @@ internal class SocketServer(private val port: Int) : MMSPChannel {
         return true
     }
 
-    override suspend fun sendData(data: ByteArray): Boolean {
+    override fun sendData(data: ByteArray): Boolean {
         val socket = socket
         if (socket == null) return false
         val outputStream = socket.outputStream

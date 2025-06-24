@@ -2,7 +2,6 @@ package com.br3ant.mmsp_socket
 
 import com.br3ant.mmsp_socket.MMSPChannel.Companion.indexMap
 import com.br3ant.mmsp_socket.utils.RGBUtils
-import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -16,7 +15,7 @@ interface MMSPChannel {
 
     fun launch(): Boolean
 
-    suspend fun sendData(data: ByteArray): Boolean
+    fun sendData(data: ByteArray): Boolean
 
     fun terminate(): Boolean
 
@@ -36,29 +35,7 @@ private fun MMSPChannel.indexBytes(): ByteArray {
         .array()
 }
 
-fun MMSPChannel.blockSend(type: CmdType, data: ByteArray) {
-    runBlocking { send(type, data) }
-}
-
-fun MMSPChannel.blockSend(type: CmdType, data: String) {
-    runBlocking { send(type, data) }
-}
-
-fun MMSPChannel.blockSendFormat(type: CmdType, width: Int, height: Int, format: Int = 1) {
-    runBlocking { sendFormat(type, width, height, format) }
-}
-
-fun MMSPChannel.blockSendRgbLikeData(
-    type: CmdType,
-    data: ByteArray,
-    format: FORMAT,
-    width: Int,
-    height: Int
-) {
-    runBlocking { sendRgbLikeData(type, data, format, width, height) }
-}
-
-suspend fun MMSPChannel.send(type: CmdType, data: ByteArray) {
+fun MMSPChannel.send(type: CmdType, data: ByteArray) {
     val size = data.size
     val indexBytes = indexBytes()
     val index = ByteBuffer.wrap(indexBytes).order(ByteOrder.LITTLE_ENDIAN)
@@ -73,11 +50,11 @@ suspend fun MMSPChannel.send(type: CmdType, data: ByteArray) {
     sendData(header + data + byteArrayOf(0x00))
 }
 
-suspend fun MMSPChannel.send(type: CmdType, string: String) {
+fun MMSPChannel.send(type: CmdType, string: String) {
     send(type, string.toByteArray())
 }
 
-suspend fun MMSPChannel.sendFormat(type: CmdType, width: Int, height: Int, format: Int = 1) {
+fun MMSPChannel.sendFormat(type: CmdType, width: Int, height: Int, format: Int = 1) {
     send(type, JSONObject().apply {
         put("format", format)
         put("width", width)
@@ -85,8 +62,7 @@ suspend fun MMSPChannel.sendFormat(type: CmdType, width: Int, height: Int, forma
     }.toString().toByteArray(Charsets.UTF_8))
 }
 
-
-suspend fun MMSPChannel.sendRgbLikeData(
+fun MMSPChannel.sendRgbLikeData(
     type: CmdType,
     data: ByteArray,
     format: FORMAT,

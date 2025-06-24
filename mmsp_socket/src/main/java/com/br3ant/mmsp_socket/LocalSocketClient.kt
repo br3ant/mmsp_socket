@@ -60,7 +60,7 @@ internal class LocalSocketClient(private val name: String) : MMSPChannel {
         return true
     }
 
-    override suspend fun sendData(data: ByteArray): Boolean {
+    override fun sendData(data: ByteArray): Boolean {
         val outputStream = socket.outputStream
         val inputStream = socket.inputStream
 

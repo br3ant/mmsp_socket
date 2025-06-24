@@ -1,7 +1,13 @@
 package com.br3ant.mmsp_socket
 
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
@@ -22,19 +28,30 @@ internal class WsServer(
 
     private var channelListener: ChannelListener? = null
 
+    private val scope = CoroutineScope(Dispatchers.IO)
+    private val queue = Channel<ByteArray>(10, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
     override fun launch(): Boolean {
         start()
+
+        scope.launch {
+            for (data in queue) {
+                val socket = socket ?: continue
+                if (socket.isOpen.not()) continue
+                while (socket.hasBufferedData() == true) delay(10)
+                socket.send(data)
+            }
+        }
         return true
     }
 
-    override suspend fun sendData(data: ByteArray): Boolean {
-        while (socket?.hasBufferedData() == true) delay(10)
-        socket?.send(data)
-        return socket != null
+    override fun sendData(data: ByteArray): Boolean {
+        return queue.trySend(data).isSuccess
     }
 
     override fun terminate(): Boolean {
         stop()
+        scope.cancel()
         return true
     }
 
