@@ -31,6 +31,9 @@ android {
     }
 }
 
+def localProperties = new Properties()
+localProperties.load(new FileInputStream(rootProject.file("local.properties")))
+
 publishing {
     publications {
         maven(MavenPublication) {
@@ -40,6 +43,15 @@ publishing {
 
             afterEvaluate {
                 from components.release // 对于 Android library，使用 release 组件
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = "https://gitee.com/winsound/mmsp_socket/raw/master" // Gitee 仓库路径
+            credentials {
+                username = localProperties.getProperty("gitee.username") // 在 local.properties 中配置
+                password = localProperties.getProperty("gitee.password") // 在 local.properties 中配置
             }
         }
     }
