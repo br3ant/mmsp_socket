@@ -3,7 +3,11 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'maven-publish'
     id 'kotlinx-serialization'
+    id 'signing'
 }
+
+group = "io.github.br3ant"
+version = "1.1.1"
 
 android {
     namespace 'com.br3ant.mmsp_socket'
@@ -29,31 +33,74 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
 }
 
 def localProperties = new Properties()
 localProperties.load(new FileInputStream(rootProject.file("local.properties")))
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'com.huisheng' // 组织 ID，自定义
-            artifactId = 'mmsp_socket' // 库名
-            version = '1.1.1' // 版本号
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
 
-            afterEvaluate {
-                from components.release // 对于 Android library，使用 release 组件
+                groupId = this.group
+                artifactId = 'mmsp_socket'
+                version = this.version
+
+                pom {
+                    name = 'mmsp_socket'
+                    description = 'A huisheng mmsp socket library'
+                    url = 'https://gitee.com/winsound/mmsp_socket'
+
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'https://gitee.com/winsound/mmsp_socket/blob/main/LICENSE'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'br3ant'
+                            name = 'br3ant'
+                            email = '1106617567@qq.com'
+                        }
+                    }
+                    scm {
+                        connection = 'scm:git:git@gitee.com:winsound/mmsp_socket.git'
+                        developerConnection = 'scm:git:ssh://git@gitee.com:winsound/mmsp_socket.git'
+                        url = 'https://gitee.com/winsound/mmsp_socket'
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                name = "OSSRH"
+                url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+                credentials {
+                    username = localProperties.getProperty("ossrhUsername")
+                    password = localProperties.getProperty("ossrhPassword")
+                }
             }
         }
     }
-    repositories {
-        maven {
-            url = "https://gitee.com/winsound/mmsp_socket/raw/master" // Gitee 仓库路径
-            credentials {
-                username = localProperties.getProperty("gitee.username") // 在 local.properties 中配置
-                password = localProperties.getProperty("gitee.password") // 在 local.properties 中配置
-            }
-        }
+
+    signing {
+        useInMemoryPgpKeys(
+                localProperties.getProperty("signing.keyId"),
+                new String(localProperties.getProperty("signing.key").decodeBase64()),
+//                localProperties.getProperty("signing.key"),
+                localProperties.getProperty("signing.password")
+        )
+        sign publishing.publications.release
     }
 }
 
