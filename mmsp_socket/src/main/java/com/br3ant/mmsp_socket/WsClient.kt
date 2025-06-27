@@ -19,10 +19,11 @@ import java.nio.ByteBuffer
  */
 
 
-internal class WsClient(
+class WsClient(
     hostname: String,
     port: Int = 9092,
-) : WebSocketClient(URI("ws://${hostname}:$port")), MMSPChannel {
+    protocol: String = "ws"
+) : WebSocketClient(URI("$protocol://${hostname}:$port")), MMSPChannel {
 
     private var channelListener: ChannelListener? = null
     private val scope = CoroutineScope(Dispatchers.IO)

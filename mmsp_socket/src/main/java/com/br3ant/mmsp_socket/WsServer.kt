@@ -20,7 +20,7 @@ import java.nio.ByteBuffer
  */
 
 
-internal class WsServer(
+class WsServer(
     private val port: Int = 9092,
 ) : WebSocketServer(InetSocketAddress(port)), MMSPChannel {
 

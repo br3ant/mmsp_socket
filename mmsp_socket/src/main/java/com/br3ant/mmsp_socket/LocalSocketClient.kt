@@ -17,7 +17,7 @@ import java.nio.ByteBuffer
  * @author houqiqi on 2025/5/21
  */
 
-internal class LocalSocketClient(private val name: String) : MMSPChannel {
+class LocalSocketClient(private val name: String) : MMSPChannel {
 
     private var socket: LocalSocket = LocalSocket()
     private val readScope = CoroutineScope(Dispatchers.IO)

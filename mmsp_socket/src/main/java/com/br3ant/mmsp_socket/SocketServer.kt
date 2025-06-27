@@ -10,7 +10,7 @@ import kotlin.concurrent.thread
  * @author houqiqi on 2025/5/21
  */
 
-internal class SocketServer(private val port: Int) : MMSPChannel {
+class SocketServer(private val port: Int) : MMSPChannel {
 
     private val serverSocket = ServerSocket(port)
     private var socket: Socket? = null

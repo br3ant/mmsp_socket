@@ -10,7 +10,7 @@ import kotlin.concurrent.thread
  * @author houqiqi on 2025/5/21
  */
 
-internal class LocalSocketServer(private val name: String) : MMSPChannel {
+class LocalSocketServer(private val name: String) : MMSPChannel {
 
     private val serverSocket = LocalServerSocket(name)
     private var socket: LocalSocket? = null
